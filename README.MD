@@ -5,6 +5,25 @@ It helps manage data and APIs easily through Service Facade.
 
 ---
 
+## 📑 Table of Contents
+- [📦 Installation](#-installation)
+- [⚙️ ENV Configuration](#️-env-configuration)
+- [🚀 Usage](#-usage)
+  - [Products Service](#products-service)
+    - [Get Products](#get-products)
+    - [Get Products with Filters](#get-products-with-filters)
+    - [Get Products with Callback](#get-products-with-callback)
+    - [Get Categories](#get-categories)
+    - [Other Methods](#other-methods)
+  - [💳 Qris Service](#-qris-service)
+    - [Get Qris Mutation](#get-qris-mutation)
+    - [Get Qris Mutation with Filters](#get-qris-mutation-with-filters)
+    - [Generate Dynamic Qris](#generate-dynamic-qris)
+    - [Accessing Qris Response](#accessing-qris-response)
+- [🌐 Usage in PHP (non CodeIgniter 4)](#-usage-in-php-non-codeigniter-4)
+
+---
+
 ## 📦 Installation
 
 1. **Install via Composer**
@@ -12,59 +31,60 @@ It helps manage data and APIs easily through Service Facade.
 composer require reactmore/qiospay-sdk
 ```
 
-## ENV
+## ⚙️ ENV Configuration
 ```env
-Qiospay.merchantCode = '';
-Qiospay.apiKey = ''; 
-Qiospay.qrisString = '';
-<!-- TODO For H2H:  -->
-Qiospay.memberId = '';
-Qiospay.memberPin = '';
-Qiospay.memberPassword = '';
+Qiospay.merchantCode = ''
+Qiospay.apiKey = ''
+Qiospay.qrisString = ''
+# TODO For H2H:
+Qiospay.memberId = ''
+Qiospay.memberPin = ''
+Qiospay.memberPassword = ''
 ```
+
+---
 
 ## 🚀 Usage
 
-### Get the service instance: 
+### Get the service instance
 ```php
 $qiospay = service('qiospay');
 $productsService = $qiospay->products();
 ```
 
-### Get a single page of products
+---
+
+## Products Service
+
+### Get Products
 ```php
-// Retrieve page 1 without filters
 $response = $productsService->getProduct([], 1);
 $data = $response->getData();
 ```
 
-Response array of page 1: 
+Example response:
 ```
 array(
-kode => string (9) "BYRTSELQM"
-produk => string (14) "Telkomsel Omni"
-keterangan => string (27) "Bayar Telkomsel Combo Sakti"
-harga => string (4) "2050"
-status => string (1) "1"
-
-...
-...
-...
+  'kode' => 'BYRTSELQM',
+  'produk' => 'Telkomsel Omni',
+  'keterangan' => 'Bayar Telkomsel Combo Sakti',
+  'harga' => '2050',
+  'status' => '1',
+  ...
 )
 ```
 
-### Get a single page of products with filters
+### Get Products with Filters
 ```php
-
 $filters = [
     'produk' => 'Telkomsel Omni',
 ];
 
 $response = $productsService->getProduct($filters, 1);
 $data = $response->getData();
-
 ```
-Response array : 
+
+Example response:
 
 | kode       | produk         | keterangan                      | harga | status |
 |------------|----------------|---------------------------------|-------|--------|
@@ -72,13 +92,9 @@ Response array :
 | CEKTSELQM  | Telkomsel Omni | Cek Harga Telkomsel Combo Sakti | 0     | 1      |
 | LISTTSELQM | Telkomsel Omni | Cek List Telkomsel Combo Sakti  | 0     | 1      |
 
-### Get products with callback (dataFilter)
-
-You can transform or filter API data on the fly using a callback:
-
+### Get Products with Callback
 ```php
 $dataFilter = function(array $products) {
-    // Keep only products with price > 0
     return array_filter($products, fn($item) => $item['harga'] > 0);
 };
 
@@ -89,50 +105,79 @@ $filters = [
 $response = $productsService->getProduct($filters, 1, $dataFilter);
 $data = $response->getData();
 ```
-Response array : 
 
-| kode       | produk         | keterangan                      | harga | status |
-|------------|----------------|---------------------------------|-------|--------|
-| BYRTSELQM  | Telkomsel Omni | Bayar Telkomsel Combo Sakti     | 2050  | 1      |
+Filtered response:
 
+| kode       | produk         | keterangan                  | harga | status |
+|------------|----------------|-----------------------------|-------|--------|
+| BYRTSELQM  | Telkomsel Omni | Bayar Telkomsel Combo Sakti | 2050  | 1      |
 
-### Get unique product categories
+### Get Categories
 ```php
 $categoriesResponse = $productsService->getCategories();
 $categories = $categoriesResponse->getData();
 ```
 
-### other method (all method support filter)
+### Other Methods
 ```php
-// Get product with optional page
-$response = $productsService->getProduct();
-// Get all product
-$response = $productsService->getAll();
-// Get all Categories (Produk)
-$response = $productsService->getCategories();
+$response = $productsService->getProduct();   // Get product with optional page
+$response = $productsService->getAll();       // Get all products
+$response = $productsService->getCategories();// Get all categories
 ```
 
-### Accessing response
+---
+
+## 💳 Qris Service
+
+### Get Qris Mutation
 ```php
-$data = $response->getData();        // Only the 'data' field
-$fullArray = $response->toArray();   // Full response including success, status_code, message
-$asObject = $response->toObject();   // Full response as object
-$json = $response->toJson();         // Full response as JSON string
+$qrisService = $qiospay->qris();
+$response = $qrisService->getMutation([], 1);
+$data = $response->getData();
 ```
 
-### Usage PHP non CI4 
+### Get Qris Mutation with Filters
 ```php
-// PHP 
+$filters = [
+    'amount' => 10000,
+];
+
+$response = $qrisService->getMutation($filters, 1);
+$data = $response->getData();
+```
+
+### Generate Dynamic Qris
+```php
+$response = $qrisService->generateDynamicQris([
+    'amount' => 15000,
+    'note'   => 'Order #12345'
+]);
+$qrisData = $response->getData();
+```
+
+### Accessing Qris Response
+```php
+$data = $response->getData();
+$fullArray = $response->toArray();
+$asObject = $response->toObject();
+$json = $response->toJson();
+```
+
+---
+
+## 🌐 Usage in PHP (non CodeIgniter 4)
+
+```php
 $qios = new QiosPayFacade([
-    $merchantCode => '',
-    $memberId => '';
-    $memberPin => '';
-    $memberPassword => '';
-    $apiKey => '';
-    $qrisString => '';
+    'merchantCode' => '',
+    'memberId' => '',
+    'memberPin' => '',
+    'memberPassword' => '',
+    'apiKey' => '',
+    'qrisString' => '',
 ]);
 
 $response = $qios->products()->getProduct([
- 'produk' => 'Telkomsel Omni',
+    'produk' => 'Telkomsel Omni',
 ], 1);
 ```
