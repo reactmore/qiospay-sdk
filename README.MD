@@ -1,7 +1,7 @@
 # Qiospay SDK for CodeIgniter 4
 
-Library ini menyediakan integrasi **QiosPay** dengan framework **CodeIgniter 4**.  
-Membantu developer mengelola transaksi, channel pembayaran, dan kalkulasi biaya dengan mudah melalui Service Facade.
+This library provides **QiosPay** integration with the **CodeIgniter 4** framework and standalone PHP projects.
+It helps manage data and APIs easily through Service Facade.
 
 ---
 
