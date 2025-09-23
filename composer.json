@@ -25,7 +25,8 @@
         "ext-curl": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "reactmore/support-adapter": "^1.0.3"
+        "reactmore/support-adapter": "^1.0.3",
+        "endroid/qr-code": "^6.0"
     },
     "require-dev": {
         "codeigniter4/devkit": "^1.3",
