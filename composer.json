@@ -25,7 +25,7 @@
         "ext-curl": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "reactmore/support-adapter": "^1.0"
+        "reactmore/support-adapter": "^1.0.3"
     },
     "require-dev": {
         "codeigniter4/devkit": "^1.3",
