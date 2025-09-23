@@ -5,12 +5,14 @@ namespace Reactmore\QiosPay;
 use Reactmore\QiosPay\Config\Qiospay;
 use Reactmore\SupportAdapter\Adapter\Auth\None;
 use Reactmore\SupportAdapter\Adapter\Guzzle;
-use Reactmore\SupportAdapter\Exceptions\MissingArguements;
+use Reactmore\QiosPay\Services\Products;
 
+/**
+ * QiosPay Provider
+ *
+ */
 class QiosPayProvider
 {
-    use QiosPayTraits;
-
     protected Qiospay $config;
 
     /**
@@ -27,42 +29,28 @@ class QiosPayProvider
      */
     private $auth;
 
+
+    private $baseUrl = "https://qiospay.id/";
+
     public function __construct(Qiospay $config)
     {
-        $this->validateConfig($config);
-
         $this->config = $config;
-        $this->adapter = new Guzzle(new None(), 'https://qiospay.id/');
+        $this->auth = new None();
+        $this->adapter = new Guzzle($this->auth, $this->baseUrl);
     }
 
-    protected function validateConfig(Qiospay $config): void
+    public function getConfig(): Qiospay
     {
-        if (empty($config->apiKey)) {
-            throw new MissingArguements("API Key tidak boleh kosong.");
-        }
-
-        if (empty($config->merchantCode)) {
-            throw new MissingArguements("Merchant Code tidak boleh kosong.");
-        }
+        return $this->config;
     }
 
     /**
-     * Handles dynamic method calls for accessing API services.
-     *
-     * @param string $name The name of the service (e.g., 'qris', 'h2h').
-     * @param array $arguments Arguments passed to the service constructor.
-     * @return ServiceInterface Returns an instance of the requested service.
-     *
-     * @throws \BadMethodCallException If the requested service does not exist.
+     * Products service
+     * 
+     * @return Products
      */
-    public function __call($name, $arguments)
+    public function products(): Products
     {
-        $className = "\\Reactmore\QiosPay\\Services\\" . ucfirst($name);
-
-        if (class_exists($className)) {
-            return new $className($this->adapter);
-        }
-
-        throw new \BadMethodCallException("Service {$name} not found in this sdk.");
+        return new Products($this->adapter, $this->getConfig());
     }
 }

@@ -3,17 +3,22 @@
 namespace Reactmore\QiosPay\Config;
 
 use CodeIgniter\Config\BaseService;
-use Reactmore\QiosPay\Config\Qiospay;
 use Reactmore\QiosPay\QiosPayProvider;
 
 class Services extends BaseService
 {
-    public static function qiospay(?Qiospay $config = null, bool $getShared = true): QiosPayProvider
+
+    /**
+     * QiosPay service
+     *
+     * @return QiosPayProvider
+     */
+    public static function qiospay(bool $getShared = true): QiosPayProvider
     {
         if ($getShared) {
-            return static::getSharedInstance('qiospay', $config);
+            return static::getSharedInstance('qiospay');
         }
 
-        return new QiosPayProvider($config ?? config('Qiospay'));
+        return new QiosPayProvider(config('Qiospay'));
     }
 }

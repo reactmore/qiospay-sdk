@@ -2,6 +2,7 @@
 
 namespace Reactmore\QiosPay\Services;
 
+use Reactmore\QiosPay\Config\Qiospay;
 use Reactmore\SupportAdapter\Adapter\AdapterInterface;
 use Reactmore\SupportAdapter\Adapter\Formatter\ResponseFormatter;
 use Reactmore\QiosPay\Services\ServiceInterface;
@@ -9,12 +10,12 @@ use Reactmore\QiosPay\Services\Traits\BodyAccessorTrait;
 use Reactmore\QiosPay\Validations\Validator;
 use GuzzleHttp\Exception\RequestException;
 use Reactmore\SupportAdapter\Exceptions\BaseException;
+use Reactmore\SupportAdapter\Exceptions\MissingArguements;
 
 /**
- * Customer Service for Mayar Headless API V1
+ * Products Service
  *
- * Provides functionalities for managing customer data, including retrieval,
- * creation, updating, and generating magic links.
+ * Provides functionalities for managing Products,
  *
  * @package Reactmore\QiosPay\Services\Products
  */
@@ -29,6 +30,14 @@ class Products implements ServiceInterface
      */
     private $adapter;
 
+
+    /**
+     * QiosPay Config.
+     *
+     * @var Qiospay
+     */
+    private $config;
+
     /**
      * Customer constructor.
      *
@@ -36,9 +45,22 @@ class Products implements ServiceInterface
      *
      * @param AdapterInterface $adapter HTTP adapter instance.
      */
-    public function __construct(AdapterInterface $adapter)
+    public function __construct(AdapterInterface $adapter, ?Qiospay $config = null)
     {
+        $this->config  = $config ?? new Qiospay();
         $this->adapter = $adapter;
+
+        $this->validateConfig($config);
+    }
+
+    protected function validateConfig(Qiospay $config): void
+    {
+        if (empty($config->apiKey)) {
+            throw new MissingArguements("API Key tidak boleh kosong.");
+        }
+        if (empty($config->merchantCode)) {
+            throw new MissingArguements("Merchant Code tidak boleh kosong.");
+        }
     }
 
     /**

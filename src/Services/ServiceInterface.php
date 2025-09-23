@@ -2,6 +2,7 @@
 
 namespace Reactmore\QiosPay\Services;
 
+use Reactmore\QiosPay\Config\Qiospay;
 use Reactmore\SupportAdapter\Adapter\AdapterInterface;
 
 /**
@@ -14,5 +15,5 @@ interface ServiceInterface
      * ServiceInterface constructor.
      * @param AdapterInterface $adapter
      */
-    public function __construct(AdapterInterface $adapter);
+    public function __construct(AdapterInterface $adapter, ?Qiospay $config = null);
 }

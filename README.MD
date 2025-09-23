@@ -12,6 +12,17 @@ Membantu developer mengelola transaksi, channel pembayaran, dan kalkulasi biaya 
 composer require reactmore/qiospay-sdk
 ```
 
+## ENV
+```env
+Qiospay.merchantCode = '';
+Qiospay.apiKey = ''; 
+Qiospay.qrisString = '';
+<!-- TODO For H2H:  -->
+Qiospay.memberId = '';
+Qiospay.memberPin = '';
+Qiospay.memberPassword = '';
+```
+
 ## 🚀 Usage
 
 ### Get the service instance: 
@@ -107,4 +118,21 @@ $data = $response->getData();        // Only the 'data' field
 $fullArray = $response->toArray();   // Full response including success, status_code, message
 $asObject = $response->toObject();   // Full response as object
 $json = $response->toJson();         // Full response as JSON string
+```
+
+### Usage PHP non CI4 
+```php
+// PHP 
+$qios = new QiosPayFacade([
+    $merchantCode => '',
+    $memberId => '';
+    $memberPin => '';
+    $memberPassword => '';
+    $apiKey => '';
+    $qrisString => '';
+]);
+
+$response = $qios->products()->getProduct([
+ 'produk' => 'Telkomsel Omni',
+], 1);
 ```
