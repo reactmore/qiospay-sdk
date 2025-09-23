@@ -5,7 +5,6 @@ namespace Reactmore\QiosPay\Services\Traits;
 /**
  * Trait BodyAccessorTrait
  * Trait that provides a method to access request body in classes that implement this trait.
- * @package Reactmore\QiosPay\Services\Traits
  */
 trait BodyAccessorTrait
 {

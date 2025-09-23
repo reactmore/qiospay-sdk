@@ -2,8 +2,8 @@
 
 namespace Reactmore\QiosPay;
 
+use InvalidArgumentException;
 use Reactmore\QiosPay\Config\Qiospay;
-use Reactmore\QiosPay\QiosPayProvider;
 
 class QiosPayFacade
 {
@@ -13,6 +13,7 @@ class QiosPayFacade
     {
         if (is_array($config)) {
             $qiosConfig = new Qiospay();
+
             foreach ($config as $key => $value) {
                 if (property_exists($qiosConfig, $key)) {
                     $qiosConfig->{$key} = $value;
@@ -21,7 +22,7 @@ class QiosPayFacade
         } elseif ($config instanceof Qiospay) {
             $qiosConfig = $config;
         } else {
-            throw new \InvalidArgumentException("Config harus berupa array atau instance QiospayConfig.");
+            throw new InvalidArgumentException('Config harus berupa array atau instance QiospayConfig.');
         }
 
         $this->provider = new QiosPayProvider($qiosConfig);
@@ -29,6 +30,6 @@ class QiosPayFacade
 
     public function __call(string $method, array $args)
     {
-        return $this->provider->$method(...$args);
+        return $this->provider->{$method}(...$args);
     }
 }

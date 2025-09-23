@@ -7,11 +7,8 @@ use Reactmore\QiosPay\QiosPayProvider;
 
 class Services extends BaseService
 {
-
     /**
      * QiosPay service
-     *
-     * @return QiosPayProvider
      */
     public static function qiospay(bool $getShared = true): QiosPayProvider
     {

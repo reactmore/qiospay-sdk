@@ -2,25 +2,23 @@
 
 namespace Reactmore\QiosPay\Services;
 
-use Reactmore\QiosPay\Config\Qiospay;
-use Reactmore\SupportAdapter\Adapter\AdapterInterface;
-use Reactmore\SupportAdapter\Adapter\Formatter\ResponseFormatter;
-use Reactmore\QiosPay\Services\ServiceInterface;
-use Reactmore\QiosPay\Services\Traits\BodyAccessorTrait;
-use Reactmore\QiosPay\Validations\Validator;
-use GuzzleHttp\Exception\RequestException;
-use Reactmore\SupportAdapter\Exceptions\BaseException;
-use Reactmore\SupportAdapter\Exceptions\MissingArguements;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
+use GuzzleHttp\Exception\RequestException;
+use Reactmore\QiosPay\Config\Qiospay;
+use Reactmore\QiosPay\Services\Traits\BodyAccessorTrait;
+use Reactmore\QiosPay\Validations\Validator;
+use Reactmore\SupportAdapter\Adapter\AdapterInterface;
+use Reactmore\SupportAdapter\Adapter\Formatter\Response;
+use Reactmore\SupportAdapter\Adapter\Formatter\ResponseFormatter;
+use Reactmore\SupportAdapter\Exceptions\BaseException;
+use Reactmore\SupportAdapter\Exceptions\MissingArguements;
 
 /**
  * Qris Service
  *
  * Provides functionalities for managing QRIS transactions,
  * including QRIS creation, mutations retrieval, and filtering.
- *
- * @package Reactmore\QiosPay\Services
  */
 class Qris implements ServiceInterface
 {
@@ -69,15 +67,15 @@ class Qris implements ServiceInterface
     protected function validateConfig(Qiospay $config): void
     {
         if (empty($config->apiKey)) {
-            throw new MissingArguements("API Key cannot be empty.");
+            throw new MissingArguements('API Key cannot be empty.');
         }
 
         if (empty($config->merchantCode)) {
-            throw new MissingArguements("Merchant Code cannot be empty.");
+            throw new MissingArguements('Merchant Code cannot be empty.');
         }
 
         if (empty($config->qrisString)) {
-            throw new MissingArguements("QRIS String cannot be empty.");
+            throw new MissingArguements('QRIS String cannot be empty.');
         }
     }
 
@@ -89,22 +87,24 @@ class Qris implements ServiceInterface
      *                       - date: 'dd-mm-yyyy'
      *                       - amount: float
      *
-     * @return \Reactmore\SupportAdapter\Adapter\Formatter\Response
+     * @return Response
      */
     public function getMutation(array $filters = [])
     {
         try {
             Validator::validateArrayRequest($filters);
-            $request = $this->adapter->get("api/mutasi/qris/{$this->config->merchantCode}/{$this->config->apiKey}");
+            $request  = $this->adapter->get("api/mutasi/qris/{$this->config->merchantCode}/{$this->config->apiKey}");
             $response = json_decode($request->getBody()->getContents(), true);
 
             if (($response['status'] ?? null) === 'success') {
                 $data = $response['data'] ?? [];
-                if (!empty($filters)) {
+                if (! empty($filters)) {
                     $data = $this->filterMutation($response, $filters['type'] ?? null, $filters['date'] ?? null, $filters['amount'] ?? null);
                 }
+
                 return ResponseFormatter::formatResponse(json_encode($data));
             }
+
             return ResponseFormatter::formatErrorResponse('Invalid response from API');
         } catch (BaseException $e) {
             return ResponseFormatter::formatErrorResponse($e->getMessage(), $e->getCode());
@@ -125,29 +125,24 @@ class Qris implements ServiceInterface
      */
     private function filterMutation(array $mutationData, ?string $typeFilter = null, ?string $dateFilter = null, ?float $amountFilter = null): array
     {
-        if (!isset($mutationData['data']) || !is_array($mutationData['data'])) {
+        if (! isset($mutationData['data']) || ! is_array($mutationData['data'])) {
             return [];
         }
 
-        return array_values(array_filter($mutationData['data'], function ($row) use ($typeFilter, $dateFilter, $amountFilter) {
-
+        return array_values(array_filter($mutationData['data'], static function ($row) use ($typeFilter, $dateFilter, $amountFilter) {
             if ($typeFilter !== null && strtoupper($row['type']) !== $typeFilter) {
                 return false;
             }
 
-            if ($dateFilter && strpos($row['date'], $dateFilter) !== 0) {
+            if ($dateFilter && ! str_starts_with($row['date'], $dateFilter)) {
                 return false;
             }
 
-            if ($amountFilter !== null && (float) $row['amount'] !== (float) $amountFilter) {
-                return false;
-            }
-
-            return true;
+            return ! ($amountFilter !== null && (float) $row['amount'] !== (float) $amountFilter);
         }));
     }
 
-     /**
+    /**
      * Generate a dynamic QRIS code based on static QRIS with
      * optional transaction amount and service fee.
      *
@@ -163,26 +158,27 @@ class Qris implements ServiceInterface
      * ```
      *
      * @param array $params {
-     *     Optional parameters.
+     *                      Optional parameters.
      *
-     *     @type int|null    $amount      Transaction amount.
-     *     @type bool        $service_fee Enable service fee.
-     *     @type string      $fee_type    Fee type: 'persen' or 'rupiah'.
-     *     @type float|int   $fee_value   Fee value.
-     *     @type string|null $path        Directory path to save the QR image.
-     * }
+     * @type int|null $amount      Transaction amount.
+     * @type bool     $service_fee Enable service fee.
+     * @type string   $fee_type    Fee type: 'persen' or 'rupiah'.
      *
-     * @return \Reactmore\SupportAdapter\Adapter\Formatter\Response
+     * @var float|int   $fee_value   Fee value.
+     * @var string|null $path        Directory path to save the QR image.
+     *                  }
+     *
+     * @return Response
      */
     public function createQris(array $params = [])
     {
-        $amount      = $params['amount']      ?? null;
+        $amount      = $params['amount'] ?? null;
         $service_fee = $params['service_fee'] ?? false;
-        $feeType     = $params['fee_type']    ?? 'persen';
-        $feeValue    = $params['fee_value']   ?? 0.7;
-        $path        = $params['path']        ?? null;
+        $feeType     = $params['fee_type'] ?? 'persen';
+        $feeValue    = $params['fee_value'] ?? 0.7;
+        $path        = $params['path'] ?? null;
 
-        $tax = '';
+        $tax       = '';
         $qrPayload = $this->config->qrisString;
 
         if ($amount) {
@@ -194,8 +190,8 @@ class Qris implements ServiceInterface
             }
 
             // Ubah QR static ke dynamic dan sisipkan nominal
-            $qrBase = substr($this->config->qrisString, 0, -4); // Hilangkan CRC lama
-            $qrBase = str_replace('010211', '010212', $qrBase);
+            $qrBase  = substr($this->config->qrisString, 0, -4); // Hilangkan CRC lama
+            $qrBase  = str_replace('010211', '010212', $qrBase);
             $qrParts = explode('5802ID', $qrBase);
 
             $nominal = '54' . sprintf('%02d', strlen($amount)) . $amount;
@@ -222,12 +218,12 @@ class Qris implements ServiceInterface
 
         // Simpan ke file jika $path diberikan
         if ($path !== null) {
-            if (!is_dir($path)) {
+            if (! is_dir($path)) {
                 mkdir($path, 0777, true);
             }
 
-            $filename  = 'qris_' . time() . '.png';
-            $filePath  = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $filename;
+            $filename = 'qris_' . time() . '.png';
+            $filePath = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $filename;
 
             file_put_contents($filePath, $image->getString());
 
@@ -250,6 +246,7 @@ class Qris implements ServiceInterface
 
         for ($c = 0, $len = strlen($str); $c < $len; $c++) {
             $crc ^= ord($str[$c]) << 8;
+
             for ($i = 0; $i < 8; $i++) {
                 $crc = ($crc & 0x8000) ? ($crc << 1) ^ 0x1021 : ($crc << 1);
                 $crc &= 0xFFFF; // Pastikan 16-bit
@@ -271,13 +268,14 @@ class Qris implements ServiceInterface
      */
     private function handleException(RequestException $e)
     {
-        $response = $e->getResponse();
-        $statusCode = $response ? $response->getStatusCode() : 500;
+        $response     = $e->getResponse();
+        $statusCode   = $response ? $response->getStatusCode() : 500;
         $responseBody = $response ? $response->getBody()->getContents() : null;
 
         if ($responseBody) {
-            $errorData = json_decode($responseBody, true);
+            $errorData    = json_decode($responseBody, true);
             $errorMessage = $errorData['messages'] ?? 'An error occurred';
+
             return ResponseFormatter::formatErrorResponse($errorMessage, $statusCode);
         }
 

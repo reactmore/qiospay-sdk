@@ -3,14 +3,13 @@
 namespace Reactmore\QiosPay;
 
 use Reactmore\QiosPay\Config\Qiospay;
-use Reactmore\SupportAdapter\Adapter\Guzzle;
-use Reactmore\SupportAdapter\Adapter\Auth\None;
 use Reactmore\QiosPay\Services\Products;
 use Reactmore\QiosPay\Services\Qris;
+use Reactmore\SupportAdapter\Adapter\Auth\None;
+use Reactmore\SupportAdapter\Adapter\Guzzle;
 
 /**
  * QiosPay Provider
- *
  */
 class QiosPayProvider
 {
@@ -30,13 +29,12 @@ class QiosPayProvider
      */
     private $auth;
 
-
-    private $baseUrl = "https://qiospay.id/";
+    private $baseUrl = 'https://qiospay.id/';
 
     public function __construct(Qiospay $config)
     {
-        $this->config = $config;
-        $this->auth = new None();
+        $this->config  = $config;
+        $this->auth    = new None();
         $this->adapter = new Guzzle($this->auth, $this->baseUrl);
     }
 
@@ -47,8 +45,6 @@ class QiosPayProvider
 
     /**
      * Products service
-     * 
-     * @return Products
      */
     public function products(): Products
     {
@@ -57,8 +53,6 @@ class QiosPayProvider
 
     /**
      * Products service
-     * 
-     * @return Qris
      */
     public function qris(): Qris
     {

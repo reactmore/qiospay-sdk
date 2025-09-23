@@ -2,13 +2,14 @@
 
 namespace Reactmore\QiosPay\Validations;
 
+use Reactmore\SupportAdapter\Exceptions\InvalidContentType;
+use Reactmore\SupportAdapter\Exceptions\MissingArguements;
+
 /**
  * Validator Class
  *
  * Provides validation methods for API requests, including checking content types,
  * required fields, and nested data structures.
- *
- * @package Reactmore\QiosPay\Validations
  */
 class Validator
 {
@@ -18,9 +19,10 @@ class Validator
      * Ensures the request contains the required fields and is of the correct type.
      *
      * @param mixed $request The request data.
-     * @param array $fields Required fields.
-     * @throws \Reactmore\SupportAdapter\Exceptions\InvalidContentType
-     * @throws \Reactmore\SupportAdapter\Exceptions\MissingArguements
+     * @param array $fields  Required fields.
+     *
+     * @throws InvalidContentType
+     * @throws MissingArguements
      */
     public static function validateInquiryRequest($request, $fields)
     {
@@ -32,7 +34,8 @@ class Validator
      * Validate if the request is an array.
      *
      * @param mixed $request The request data.
-     * @throws \Reactmore\SupportAdapter\Exceptions\InvalidContentType If the request is not an array.
+     *
+     * @throws InvalidContentType If the request is not an array.
      */
     public static function validateArrayRequest($request)
     {
@@ -45,7 +48,8 @@ class Validator
      * Ensures the required fields exist and validates nested discount and coupon fields.
      *
      * @param array $payload The request payload.
-     * @throws \Reactmore\SupportAdapter\Exceptions\MissingArguements If required fields are missing.
+     *
+     * @throws MissingArguements If required fields are missing.
      */
     public static function validateCreateCoupon(array $payload)
     {
@@ -55,9 +59,9 @@ class Validator
             'eligibleCustomerType',
             'minimumPurchase',
             'value',
-            'totalCoupons'
+            'totalCoupons',
         ]);
-        if (!empty($payload['coupon'])) {
+        if (! empty($payload['coupon'])) {
             MainValidator::validateNestedFields($payload, 'coupon', ['type']);
         }
     }
@@ -68,7 +72,8 @@ class Validator
      * Ensures required fields exist and validates nested installment fields.
      *
      * @param array $payload The request payload.
-     * @throws \Reactmore\SupportAdapter\Exceptions\MissingArguements If required fields are missing.
+     *
+     * @throws MissingArguements If required fields are missing.
      */
     public static function validateCreateInstallment(array $payload)
     {
@@ -77,7 +82,7 @@ class Validator
             'description',
             'interest',
             'tenure',
-            'dueDate'
+            'dueDate',
         ]);
     }
 
@@ -86,9 +91,10 @@ class Validator
      *
      * Ensures the argument is not empty and is a string.
      *
-     * @param mixed $argument The argument to validate.
+     * @param mixed  $argument  The argument to validate.
      * @param string $fieldName The field name for error reporting.
-     * @throws \Reactmore\SupportAdapter\Exceptions\MissingArguements If the argument is empty or invalid.
+     *
+     * @throws MissingArguements If the argument is empty or invalid.
      */
     public static function validateSingleArgument($argument, $fieldName)
     {

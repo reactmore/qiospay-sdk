@@ -2,13 +2,13 @@
 
 namespace Reactmore\QiosPay\Services;
 
+use GuzzleHttp\Exception\RequestException;
 use Reactmore\QiosPay\Config\Qiospay;
-use Reactmore\SupportAdapter\Adapter\AdapterInterface;
-use Reactmore\SupportAdapter\Adapter\Formatter\ResponseFormatter;
-use Reactmore\QiosPay\Services\ServiceInterface;
 use Reactmore\QiosPay\Services\Traits\BodyAccessorTrait;
 use Reactmore\QiosPay\Validations\Validator;
-use GuzzleHttp\Exception\RequestException;
+use Reactmore\SupportAdapter\Adapter\AdapterInterface;
+use Reactmore\SupportAdapter\Adapter\Formatter\Response;
+use Reactmore\SupportAdapter\Adapter\Formatter\ResponseFormatter;
 use Reactmore\SupportAdapter\Exceptions\BaseException;
 use Reactmore\SupportAdapter\Exceptions\MissingArguements;
 
@@ -16,8 +16,6 @@ use Reactmore\SupportAdapter\Exceptions\MissingArguements;
  * Products Service
  *
  * Provides functionalities for managing Products,
- *
- * @package Reactmore\QiosPay\Services\Products
  */
 class Products implements ServiceInterface
 {
@@ -29,7 +27,6 @@ class Products implements ServiceInterface
      * @var AdapterInterface
      */
     private $adapter;
-
 
     /**
      * QiosPay Config.
@@ -56,20 +53,20 @@ class Products implements ServiceInterface
     protected function validateConfig(Qiospay $config): void
     {
         if (empty($config->apiKey)) {
-            throw new MissingArguements("API Key tidak boleh kosong.");
+            throw new MissingArguements('API Key tidak boleh kosong.');
         }
         if (empty($config->merchantCode)) {
-            throw new MissingArguements("Merchant Code tidak boleh kosong.");
+            throw new MissingArguements('Merchant Code tidak boleh kosong.');
         }
     }
 
     /**
      * Retrieve products for a single page with optional filters.
      *
-     * @param array $filters Optional key-value filters to apply to data.
-     * @param int $page Page number to fetch.
+     * @param array         $filters    Optional key-value filters to apply to data.
+     * @param int           $page       Page number to fetch.
      * @param callable|null $dataFilter Optional callback to filter/transform API data.
-     * 
+     *
      * Example of $dataFilter callback:
      * ```
      * $dataFilter = function(array $products) {
@@ -77,25 +74,26 @@ class Products implements ServiceInterface
      * };
      * $response = $this->getProduct([], 1, $dataFilter);
      * ```
-     * 
-     * @return \Reactmore\SupportAdapter\Adapter\Formatter\Response
+     *
+     * @return Response
      */
     public function getProduct(array $filters = [], int $page = 1, ?callable $dataFilter = null)
     {
         try {
             Validator::validateArrayRequest($filters);
 
-            $request = $this->adapter->get("admin/modules/mapping/harga/{$page}/reseller");
+            $request      = $this->adapter->get("admin/modules/mapping/harga/{$page}/reseller");
             $responseData = json_decode($request->getBody()->getContents(), true);
 
             // Apply local filters if provided
-            if (!empty($filters)) {
-                $responseData = array_values(array_filter($responseData, function ($item) use ($filters) {
+            if (! empty($filters)) {
+                $responseData = array_values(array_filter($responseData, static function ($item) use ($filters) {
                     foreach ($filters as $key => $value) {
-                        if (!isset($item[$key]) || (string)$item[$key] !== (string)$value) {
+                        if (! isset($item[$key]) || (string) $item[$key] !== (string) $value) {
                             return false;
                         }
                     }
+
                     return true;
                 }));
             }
@@ -103,7 +101,7 @@ class Products implements ServiceInterface
             return ResponseFormatter::formatResponse(
                 json_encode($responseData),
                 message: null,
-                dataFilter: $dataFilter
+                dataFilter: $dataFilter,
             );
         } catch (BaseException $e) {
             return ResponseFormatter::formatErrorResponse($e->getMessage(), $e->getCode());
@@ -115,18 +113,18 @@ class Products implements ServiceInterface
     /**
      * Retrieve all products across multiple pages with optional filters.
      *
-     * @param array $filters Key-value filters to apply on each page.
-     * @param int $maxPage Maximum number of pages to fetch.
+     * @param array         $filters    Key-value filters to apply on each page.
+     * @param int           $maxPage    Maximum number of pages to fetch.
      * @param callable|null $dataFilter Optional callback to filter/transform data.
-     * 
+     *
      * ```
      * $dataFilter = function(array $products) {
      *     return array_filter($products, fn($item) => $item['stock'] > 0);
      * };
      * $response = $productsService->getAll([], 5, $dataFilter);
      * ```
-     * 
-     * @return \Reactmore\SupportAdapter\Adapter\Formatter\Response
+     *
+     * @return Response
      */
     public function getAll(array $filters = [], int $maxPage = 10, ?callable $dataFilter = null)
     {
@@ -138,7 +136,7 @@ class Products implements ServiceInterface
 
                 $pageData = $response->getData();
 
-                if (!is_array($pageData) || empty($pageData)) {
+                if (! is_array($pageData) || empty($pageData)) {
                     break; // stop if no data or invalid format
                 }
 
@@ -148,7 +146,7 @@ class Products implements ServiceInterface
             return ResponseFormatter::formatResponse(
                 json_encode($allProducts),
                 message: null,
-                dataFilter: $dataFilter
+                dataFilter: $dataFilter,
             );
         } catch (BaseException $e) {
             return ResponseFormatter::formatErrorResponse($e->getMessage(), $e->getCode());
@@ -160,27 +158,26 @@ class Products implements ServiceInterface
     /**
      * Retrieve unique product categories across all pages.
      *
-     * @param array $filters Key-value filters to apply on each page.
-     * @param int $maxPage Maximum number of pages to fetch.
+     * @param array         $filters    Key-value filters to apply on each page.
+     * @param int           $maxPage    Maximum number of pages to fetch.
      * @param callable|null $dataFilter Optional callback to filter/transform data.
-     * @return \Reactmore\SupportAdapter\Adapter\Formatter\Response
+     *
+     * @return Response
      */
     public function getCategories(array $filters = [], int $maxPage = 10, ?callable $dataFilter = null)
     {
         $allProductsResponse = $this->getAll($filters, $maxPage, $dataFilter);
-        $allProducts = $allProductsResponse->getData();
+        $allProducts         = $allProductsResponse->getData();
 
-        if (empty($allProducts) || !is_array($allProducts)) {
+        if (empty($allProducts) || ! is_array($allProducts)) {
             return ResponseFormatter::formatResponse(json_encode([]));
         }
 
-        $categories = array_map(fn($item) => $item['produk'] ?? null, $allProducts);
+        $categories = array_map(static fn ($item) => $item['produk'] ?? null, $allProducts);
         $categories = array_values(array_unique(array_filter($categories)));
 
         return ResponseFormatter::formatResponse(json_encode($categories));
     }
-
-
 
     /**
      * Handle API request exceptions.
@@ -189,17 +186,19 @@ class Products implements ServiceInterface
      * returning a structured error response.
      *
      * @param RequestException $e The caught exception.
+     *
      * @return array Formatted error response with status code.
      */
     private function handleException(RequestException $e)
     {
-        $response = $e->getResponse();
-        $statusCode = $response ? $response->getStatusCode() : 500;
+        $response     = $e->getResponse();
+        $statusCode   = $response ? $response->getStatusCode() : 500;
         $responseBody = $response ? $response->getBody()->getContents() : null;
 
         if ($responseBody) {
-            $errorData = json_decode($responseBody, true);
+            $errorData    = json_decode($responseBody, true);
             $errorMessage = $errorData['messages'] ?? 'An error occurred';
+
             return ResponseFormatter::formatErrorResponse($errorMessage, $statusCode);
         }
 
