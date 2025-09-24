@@ -111,12 +111,46 @@ class Transactions implements ServiceInterface
             }
 
             $response = $this->adapter->get('api/h2h/trx', $payload);
+            $body = (string) $response->getBody();
 
-            if ($response->getBody()->getContents() === 'Invalid user') {
+            if ($body === 'Invalid user') {
                 throw new MissingArguements('Invalid user');
             }
 
-            return ResponseFormatter::formatResponse($response->getBody());
+            $parsed = [];
+            if (is_string($body)) {
+                $patterns = [
+                    // Pola 1: ada koma setelah dest
+                    '/R#(\S+)\s+(\S+)\s+(\S+),\s+(.*?)\s+Saldo\s([\d\.]+)\s@\s(.+)$/',
+
+                    // Pola 2: dest diikuti langsung status (tanpa koma)
+                    '/R#(\S+)\s+(\S+)\s+(\S+)\s+(.*?)\s+Saldo\s([\d\.]+)\s@\s(.+)$/',
+
+                    // Pola 3: fallback umum (jaga-jaga kalau format berubah)
+                    '/R#(\S+)\s+(\S+)\s+(\S+)(?:,)?\s+(.*?)\s+Saldo\s([\d\.]+)\s@\s(.+)$/',
+                ];
+
+                $parsed = ['message' => trim($body)]; // default fallback
+
+                foreach ($patterns as $pattern) {
+                    if (preg_match($pattern, $body, $matches)) {
+                        $parsed = [
+                            'trx_id'       => $matches[1] ?? null,
+                            'product_code' => $matches[2] ?? null,
+                            'dest'         => $matches[3] ?? null,
+                            'status_msg'   => trim($matches[4] ?? ''),
+                            'saldo'        => $matches[5] ?? null,
+                            'datetime'     => $matches[6] ?? null,
+                            'raw'          => trim($body),
+                        ];
+                        break;
+                    }
+                }
+            }
+
+            return ResponseFormatter::formatResponse(
+                json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+            );
         } catch (BaseException $e) {
             return ResponseFormatter::formatErrorResponse($e->getMessage(), $e->getCode());
         } catch (RequestException $e) {
