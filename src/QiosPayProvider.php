@@ -5,6 +5,7 @@ namespace Reactmore\QiosPay;
 use Reactmore\QiosPay\Config\Qiospay;
 use Reactmore\QiosPay\Services\Products;
 use Reactmore\QiosPay\Services\Qris;
+use Reactmore\QiosPay\Services\Transactions;
 use Reactmore\SupportAdapter\Adapter\Auth\None;
 use Reactmore\SupportAdapter\Adapter\Guzzle;
 
@@ -52,10 +53,18 @@ class QiosPayProvider
     }
 
     /**
-     * Products service
+     * QRIS Manager service
      */
     public function qris(): Qris
     {
         return new Qris($this->adapter, $this->getConfig());
+    }
+
+    /**
+     * Transaction H2H service
+     */
+    public function transactions(): Transactions
+    {
+        return new Transactions($this->adapter, $this->getConfig());
     }
 }

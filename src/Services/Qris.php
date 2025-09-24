@@ -84,7 +84,7 @@ class Qris implements ServiceInterface
      *
      * @param array $filters Optional filters:
      *                       - type: 'CR' or 'DB'
-     *                       - date: 'dd-mm-yyyy'
+     *                       - date: 'Y-m-d'
      *                       - amount: float
      *
      * @return Response
@@ -118,7 +118,7 @@ class Qris implements ServiceInterface
      *
      * @param array       $mutationData Full mutation response from API.
      * @param string|null $typeFilter   Optional type filter ('CR' or 'DB').
-     * @param string|null $dateFilter   Optional date filter (format: 'YYYY-MM-DD').
+     * @param string|null $dateFilter   Optional date filter (format: 'Y-m-d').
      * @param float|null  $amountFilter Optional amount filter.
      *
      * @return array Filtered mutation data.
