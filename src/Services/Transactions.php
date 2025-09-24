@@ -94,20 +94,30 @@ class Transactions implements ServiceInterface
             Validator::validateInquiryRequest($request, ['product', 'dest']);
             $refID = $request['refID'] ?? 'trx_' . time();
 
-            $basePayload = [
+            $payload = [
+                'product'  => $request['product'],
+                'dest'     => $request['dest'],
                 'refID'    => $refID,
                 'memberID' => $this->config->memberId,
                 'pin'      => $this->config->memberPin,
                 'password' => $this->config->memberPassword,
             ];
 
-            $payload = array_merge($basePayload, [
-                'product' => strtolower($request['product']),
-                'dest'    => $request['dest'],
-            ]);
 
+            // optional
             if (! empty($request['harga_max'])) {
                 $payload['harga_max'] = (int) $request['harga_max'];
+            }
+
+            if (! empty($request['sign'])) {
+                $payload['sign'] = $this->generateQiosPaySignature(
+                    $payload['memberID'],
+                    $payload['product'],
+                    $payload['dest'],
+                    $payload['refID'],
+                    $payload['pin'],
+                    $payload['password']
+                );
             }
 
             $response = $this->adapter->get('api/h2h/trx', $payload);
@@ -120,13 +130,13 @@ class Transactions implements ServiceInterface
             $parsed = [];
             if (is_string($body)) {
                 $patterns = [
-                    // Pola 1: ada koma setelah dest
+                    // Pola 1: ada comma after dest
                     '/R#(\S+)\s+(\S+)\s+(\S+),\s+(.*?)\s+Saldo\s([\d\.]+)\s@\s(.+)$/',
 
-                    // Pola 2: dest diikuti langsung status (tanpa koma)
+                    // Pola 2: dest follow status (without comma)
                     '/R#(\S+)\s+(\S+)\s+(\S+)\s+(.*?)\s+Saldo\s([\d\.]+)\s@\s(.+)$/',
 
-                    // Pola 3: fallback umum (jaga-jaga kalau format berubah)
+                    // Pola 3: fallback
                     '/R#(\S+)\s+(\S+)\s+(\S+)(?:,)?\s+(.*?)\s+Saldo\s([\d\.]+)\s@\s(.+)$/',
                 ];
 
@@ -156,6 +166,34 @@ class Transactions implements ServiceInterface
         } catch (RequestException $e) {
             return $this->handleException($e);
         }
+    }
+
+    /**
+     * Generate QiosPay H2H signature
+     */
+    function generateQiosPaySignature(
+        string $memberID,
+        string $product,
+        string $dest,
+        string $refID,
+        string $pin,
+        string $password
+    ): string {
+        // pastikan trim dan lowercase sesuai dok
+        $product = strtolower(trim($product));
+        $dest    = trim($dest);
+        $refID   = trim($refID);
+        $pin     = trim($pin);
+        $password = trim($password);
+        $memberID = trim($memberID);
+
+        $stringToHash = "Ravinagc|$memberID|$product|$dest|$refID|$pin|$password";
+
+        // sha1 raw output
+        $sha1Hash = sha1($stringToHash);
+
+        // encode base64
+        return base64_encode($sha1Hash);
     }
 
     /**
