@@ -140,7 +140,7 @@ class Transactions implements ServiceInterface
                     '/R#(\S+)\s+(\S+)\s+(\S+)(?:,)?\s+(.*?)\s+Saldo\s([\d\.]+)\s@\s(.+)$/',
                 ];
 
-                $parsed = ['message' => trim($body)]; // default fallback
+                $parsed = ['raw' => trim($body)]; // default fallback
 
                 foreach ($patterns as $pattern) {
                     if (preg_match($pattern, $body, $matches)) {
