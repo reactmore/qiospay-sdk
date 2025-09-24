@@ -64,7 +64,6 @@ class Transactions implements ServiceInterface
      */
     protected function validateConfig(Qiospay $config): void
     {
-
         if (empty($config->memberId)) {
             throw new MissingArguements('Member Id or User Id cannot be empty.');
         }
@@ -82,9 +81,9 @@ class Transactions implements ServiceInterface
      * Retrieve QRIS mutations from the API.
      *
      * @param array $filters Optional filters:
-     *                       - refID: 
-     *                       - product: 
-     *                       - dest: 
+     *                       - refID:
+     *                       - product:
+     *                       - dest:
      *                       - harga_max:
      *
      * @return Response
@@ -93,10 +92,10 @@ class Transactions implements ServiceInterface
     {
         try {
             Validator::validateInquiryRequest($request, ['product', 'dest']);
-            $refID      = $request['refID'] ?? 'trx_' . time();
+            $refID = $request['refID'] ?? 'trx_' . time();
 
             $basePayload = [
-                'refID'   => $refID,
+                'refID'    => $refID,
                 'memberID' => $this->config->memberId,
                 'pin'      => $this->config->memberPin,
                 'password' => $this->config->memberPassword,
@@ -107,11 +106,11 @@ class Transactions implements ServiceInterface
                 'dest'    => $request['dest'],
             ]);
 
-            if (!empty($request['harga_max'])) {
+            if (! empty($request['harga_max'])) {
                 $payload['harga_max'] = (int) $request['harga_max'];
             }
 
-            $response  = $this->adapter->get("api/h2h/trx", $payload);
+            $response = $this->adapter->get('api/h2h/trx', $payload);
 
             if ($response->getBody()->getContents() === 'Invalid user') {
                 throw new MissingArguements('Invalid user');
