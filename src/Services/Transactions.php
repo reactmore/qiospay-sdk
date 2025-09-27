@@ -129,32 +129,11 @@ class Transactions implements ServiceInterface
 
             $parsed = [];
             if (is_string($body)) {
-                $patterns = [
-                    // Pola 1: ada comma after dest
-                    '/R#(\S+)\s+(\S+)\s+(\S+),\s+(.*?)\s+Saldo\s([\d\.]+)\s@\s(.+)$/',
-
-                    // Pola 2: dest follow status (without comma)
-                    '/R#(\S+)\s+(\S+)\s+(\S+)\s+(.*?)\s+Saldo\s([\d\.]+)\s@\s(.+)$/',
-
-                    // Pola 3: fallback
-                    '/R#(\S+)\s+(\S+)\s+(\S+)(?:,)?\s+(.*?)\s+Saldo\s([\d\.]+)\s@\s(.+)$/',
-                ];
-
-                $parsed = ['raw' => trim($body)]; // default fallback
-
-                foreach ($patterns as $pattern) {
-                    if (preg_match($pattern, $body, $matches)) {
-                        $parsed = [
-                            'trx_id'       => $matches[1] ?? null,
-                            'product_code' => $matches[2] ?? null,
-                            'dest'         => $matches[3] ?? null,
-                            'status_msg'   => trim($matches[4] ?? ''),
-                            'saldo'        => $matches[5] ?? null,
-                            'datetime'     => $matches[6] ?? null,
-                            'raw'          => trim($body),
-                        ];
-                        break;
-                    }
+                if (preg_match($this->getRejectedHargaMaxPattern(), $body, $matches)) {
+                    $parsed = $this->parseRejectedHargaMax($matches, $body);
+                } else {
+                    // fallback ke regex lama kamu
+                    $parsed = $this->parseNormalResponse($body);
                 }
             }
 
@@ -166,6 +145,94 @@ class Transactions implements ServiceInterface
         } catch (RequestException $e) {
             return $this->handleException($e);
         }
+    }
+
+    /**
+     * Regex pattern untuk kasus Harga Max Rejected (semua provider)
+     */
+    private function getRejectedHargaMaxPattern(): string
+    {
+        return '/^R#(\S+)\s+Saldo\s+(\w+)\s+([\d\.]+)\s+([A-Z]+\d+)\.(\d+),\s+(.*?)\s+Saldo\s+([\d\.,]+)\s*@\s*(.+)$/u';
+    }
+
+    /**
+     * Parse response Harga Max Rejected
+     */
+    private function parseRejectedHargaMax(array $matches, string $raw): array
+    {
+        return [
+            'trx_id'       => $matches[1] ?? null,
+            'product_code' => $matches[4] ?? null,  
+            'dest'         => $matches[5] ?? null,   
+            'status_msg'   => trim($matches[6] ?? ''), 
+            'saldo'        => $matches[7] ?? null,
+            'datetime'     => $matches[8] ?? null,
+            'raw'          => trim($raw),
+        ];
+    }
+
+    /**
+     * Parse response normal (gunakan patterns lama kamu)
+     */
+    private function parseNormalResponse(string $body): array
+    {
+        $parsed = [
+            'trx_id'       => null,
+            'product_code' => null,
+            'dest'         => null,
+            'status_msg'   => null,
+            'saldo'        => null,
+            'datetime'     => null,
+            'raw'          => trim($body),
+        ];
+
+        $patterns = [
+            // 1) Normal dengan koma
+            '/^R#(\S+)\s+(\S+)\s+(\S+),\s+(.*?)\s+Saldo\s([\d\.,]+)\s*@\s*(.+)$/u',
+            // 2) Normal tanpa koma
+            '/^R#(\S+)\s+(\S+)\s+(\S+)\s+(.*?)\s+Saldo\s([\d\.,]+)\s*@\s*(.+)$/u',
+            // 3) Optional comma
+            '/^R#(\S+)\s+(\S+)\s+(\S+)(?:,)?\s+(.*?)\s+Saldo\s([\d\.,]+)\s*@\s*(.+)$/u',
+            // 4) Generic fallback
+            '/^R#(\S+)\s+(.*?),\s+(.*?)\s+Saldo\s([\d\.,]+)\s*@\s*(.+)$/u',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $body, $matches)) {
+                $groupCount = count($matches) - 1;
+
+                if ($groupCount === 6) {
+                    $parsed['trx_id']       = $matches[1] ?? null;
+                    $parsed['product_code'] = $matches[2] ?? null;
+                    $parsed['dest']         = $matches[3] ?? null;
+                    $parsed['status_msg']   = trim($matches[4] ?? '');
+                    $parsed['saldo']        = $matches[5] ?? null;
+                    $parsed['datetime']     = $matches[6] ?? null;
+                } elseif ($groupCount === 5) {
+                    $parsed['trx_id']       = $matches[1] ?? null;
+                    $leftPart               = trim($matches[2] ?? '');
+                    $parsed['status_msg']   = trim($matches[3] ?? '');
+                    $parsed['saldo']        = $matches[4] ?? null;
+                    $parsed['datetime']     = $matches[5] ?? null;
+
+                    if ($leftPart !== '') {
+                        $tokens = preg_split('/\s+/', $leftPart);
+                        $lastToken = end($tokens);
+                        if (preg_match('/\d/', $lastToken)) {
+                            array_pop($tokens);
+                            $parsed['product_code'] = trim(implode(' ', $tokens)) ?: $leftPart;
+                            $parsed['dest'] = $lastToken;
+                        } else {
+                            $parsed['product_code'] = $leftPart;
+                            $parsed['dest'] = null;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        return $parsed;
     }
 
     /**
