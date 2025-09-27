@@ -33,8 +33,15 @@ if (!function_exists('parse_qiospay_message')) {
             $result['status'] = 'GAGAL';
         }
 
-        // ambil nomor hp
-        if (preg_match('/\.(08[0-9]+)/', $message, $m)) {
+        // ambil product + phone
+        if (preg_match('/(SUKSES|GAGAL)[\.,]\s*(.+?)\.(\d{10,13})\./s', $message, $m)) {
+            $result['status']  = $m[1];
+            $result['product'] = trim($m[2]);
+            $result['phone']   = $m[3];
+        }
+
+        // ambil nomor hp fallback (kalau regex di atas tidak ketemu)
+        if (!$result['phone'] && preg_match('/\.(08[0-9]+)/', $message, $m)) {
             $result['phone'] = $m[1];
         }
 
