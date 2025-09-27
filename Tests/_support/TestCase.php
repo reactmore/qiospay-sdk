@@ -39,7 +39,10 @@ abstract class TestCase extends CIUnitTestCase
         $this->config->apiKey       = 'dummy_api_key';
         $this->config->merchantCode = 'dummy_merchant_code';
         $this->config->qrisString   = 'dummy_merchant_qris_string';
-        
+        $this->config->memberId   = 'dummy_memberId';
+        $this->config->memberPin   = 'dummy_memberPin';
+        $this->config->memberPassword   = 'dummy_memberPassword';
+
         $this->qiospay = new QiosPayProvider($this->config);
     }
 }
