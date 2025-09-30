@@ -1,76 +1,76 @@
 <?php
 
-if (!function_exists('parse_qiospay_message')) {
-    /**
-     * Parse QiosPay H2H callback message menjadi array terstruktur
-     *
-     * @param string $message
-     * @return array
-     */
-    function parse_qiospay_message(string $message): array
+if (!function_exists('parseTransactionMessage')) {
+    function parseTransactionMessage(string $message): array
     {
+        // $message 
+        // 'T#1899822 R#trx_1759243747, Alhamdulillah, SUKSES. DANA H2H-Saldo Dana 15.000.085155092922. SN: DanaTopup-DNID ANDXX SETXXXX\/15000\/2025093010121481030100166095304620436.. Saldo 73345 - 15075 = 58.270 @30\/09\/2025 21:55\r\nqiospay.id'
+
+        // decode escape $message
+        $clean = str_replace(['\\/', '\r', '\n'], ['/', '', ''], $message);
+        $clean = trim($clean);
+        
         $result = [
-            'trxid'     => null,
-            'status'    => null,
-            'phone'     => null,
-            'product'   => null,
-            'sn'        => null,
-            'nominal'   => null,
-            'saldo'     => null,
-            'datetime'  => null,
-            'note'      => null,
+            "trxid"    => null,
+            "refid"    => null,
+            "status"   => null,
+            "phone"    => null,
+            "product"  => null,
+            "sn"       => null,
+            "nominal"  => null,
+            "saldo"    => null,
+            "datetime" => null,
+            "note"     => null,
         ];
 
-        // ambil trxid (R#...)
-        if (preg_match('/R#([a-zA-Z0-9_]+)/', $message, $m)) {
+        // trxid
+        if (preg_match('/T#(\d+)/', $clean, $m)) {
             $result['trxid'] = $m[1];
         }
 
-        // cek status (SUKSES / GAGAL)
-        if (stripos($message, 'SUKSES') !== false) {
-            $result['status'] = 'SUKSES';
-        } elseif (stripos($message, 'GAGAL') !== false) {
-            $result['status'] = 'GAGAL';
+        // refid
+        if (preg_match('/R#([a-zA-Z0-9_]+)/', $clean, $m)) {
+            $result['refid'] = $m[1];
         }
 
-        // ambil product + phone
-        if (preg_match('/(SUKSES|GAGAL)[\.,]\s*(.+?)\.(\d{10,13})\./s', $message, $m)) {
-            $result['status']  = $m[1];
-            $result['product'] = trim($m[2]);
-            $result['phone']   = $m[3];
+        // status
+        if (preg_match('/\b(SUKSES|GAGAL|PENDING)\b/i', $clean, $m)) {
+            $result['status'] = strtoupper($m[1]);
         }
 
-        // ambil nomor hp fallback (kalau regex di atas tidak ketemu)
-        if (!$result['phone'] && preg_match('/\.(08[0-9]+)/', $message, $m)) {
+        // phone
+        if (preg_match('/\b(08[0-9]{8,13})\b/', $clean, $m)) {
             $result['phone'] = $m[1];
         }
 
-        // ambil SN jika ada
-        if (preg_match('/SN:\s*([^ ]+)/', $message, $m)) {
-            $result['sn'] = $m[1];
+        // product (antara SUKSES. ... . SN:)
+        if (preg_match('/SUKSES\.\s*(.+?)\.\d{10,13}\.\s*SN:/i', $clean, $m)) {
+            $result['product'] = trim($m[1]);
         }
 
-        // ambil nominal
-        if (preg_match('/Nominal:([0-9\.]+)/', $message, $m)) {
+        // SN
+        if (preg_match('/SN:\s*(.+?)\.\./', $clean, $m)) {
+            $result['sn'] = trim($m[1]) . '.';
+        }
+
+        // nominal (cari /xxxx/ di SN atau angka bertitik 15.000 → 15000)
+        if ($result['sn'] && preg_match('/\/(\d{4,7})\//', $result['sn'], $m)) {
             $result['nominal'] = $m[1];
+        } elseif ($result['product'] && preg_match('/(\d{1,3}(?:\.\d{3})+)/', $result['product'], $m)) {
+            $result['nominal'] = str_replace('.', '', $m[1]);
         }
 
-        // ambil saldo
-        if (preg_match('/Saldo(?:\s*[0-9\-=\s]*)?:\s*([0-9\.]+)/', $message, $m)) {
-            $result['saldo'] = $m[1];
-        } elseif (preg_match('/Saldo\s+[0-9\-=\s]*=\s*([0-9\.]+)/', $message, $m)) {
+        // saldo
+        if (preg_match('/=\s*([\d\.]+)\s*@/', $clean, $m)) {
             $result['saldo'] = $m[1];
         }
 
-        // ambil datetime (jika ada format dd/mm/yyyy hh:mm)
-        if (preg_match('/@(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})/', $message, $m)) {
+        // datetime
+        if (preg_match('/@(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})/', $clean, $m)) {
             $result['datetime'] = $m[1];
         }
 
-        // ambil keterangan tambahan (Ket:)
-        if (preg_match('/Ket:\s*(.+)$/', $message, $m)) {
-            $result['note'] = trim($m[1]);
-        }
+        $result['raw'] = $clean;
 
         return $result;
     }
