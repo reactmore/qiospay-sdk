@@ -162,9 +162,9 @@ class Transactions implements ServiceInterface
     {
         return [
             'trx_id'       => $matches[1] ?? null,
-            'product_code' => $matches[4] ?? null,  
-            'dest'         => $matches[5] ?? null,   
-            'status_msg'   => trim($matches[6] ?? ''), 
+            'product_code' => $matches[4] ?? null,
+            'dest'         => $matches[5] ?? null,
+            'status_msg'   => trim($matches[6] ?? ''),
             'saldo'        => $matches[7] ?? null,
             'datetime'     => $matches[8] ?? null,
             'raw'          => trim($raw),
@@ -187,6 +187,8 @@ class Transactions implements ServiceInterface
         ];
 
         $patterns = [
+            // 0) Kasus khusus voucher tidak tersedia
+            '/^R#(\S+)\s+(\S+)\s+(\S+)\s+(Gagal, Voucher tidak tersedia,.*?)\s+Saldo\s([\d\.,]+)\s*@\s*(.+)$/u',
             // 1) Normal dengan koma
             '/^R#(\S+)\s+(\S+)\s+(\S+),\s+(.*?)\s+Saldo\s([\d\.,]+)\s*@\s*(.+)$/u',
             // 2) Normal tanpa koma

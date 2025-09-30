@@ -88,6 +88,33 @@ class TransactionsServiceTest extends TestCase
         $this->assertSame('27/09/2025 20:10', $response->data['datetime']);
     }
 
+    public function testParseVoucherNotAvailable(): void
+    {
+        $body = "R#trx_1759238656 DANA15 6285155092922 Gagal, Voucher tidak tersedia, silakan pilih nominal lainnya.. Saldo 88.420 @ 30/09/2025 20:24";
+
+        $mockStream = $this->createMock(\Psr\Http\Message\StreamInterface::class);
+        $mockStream->method('__toString')->willReturn($body);
+
+        $mockResponse = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+        $mockResponse->method('getBody')->willReturn($mockStream);
+
+        $mockAdapter = $this->createMock(\Reactmore\SupportAdapter\Adapter\AdapterInterface::class);
+        $mockAdapter->expects($this->once())
+            ->method('get')
+            ->willReturn($mockResponse);
+
+        $service  = new Transactions($mockAdapter, $this->config);
+        $response = $service->h2h(['product' => 'DANA15', 'dest' => '6285155092922']);
+
+        $this->assertTrue($response->success);
+        $this->assertSame('trx_1759238656', $response->data['trx_id']);
+        $this->assertSame('DANA15', $response->data['product_code']);
+        $this->assertSame('6285155092922', $response->data['dest']);
+        $this->assertStringContainsString('Gagal, Voucher tidak tersedia, silakan pilih nominal lainnya..', $response->data['status_msg']);
+        $this->assertSame('88.420', $response->data['saldo']);
+        $this->assertSame('30/09/2025 20:24', $response->data['datetime']);
+    }
+
     public function testParseResponsePendingProcessed(): void
     {
         $body = "R#trx_1758143250 danabqsp 085155092922 Transaksi sebelumnya ke ID Pelanggan 085155092922 masih dalam proses.. Saldo 85.343 @ 18/09/2025 04:07";
