@@ -129,11 +129,11 @@ class Transactions implements ServiceInterface
 
             $parsed = [];
             if (is_string($body)) {
-                if (preg_match($this->getRejectedHargaMaxPattern(), $body, $matches)) {
-                    $parsed = $this->parseRejectedHargaMax($matches, $body);
+                if (preg_match($this->getRejectedHargaMaxPattern(), trim($body), $matches)) {
+                    $parsed = $this->parseRejectedHargaMax($matches, trim($body));
                 } else {
                     // fallback ke regex lama kamu
-                    $parsed = $this->parseNormalResponse($body);
+                    $parsed = $this->parseNormalResponse(trim($body));
                 }
             }
 
