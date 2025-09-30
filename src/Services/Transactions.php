@@ -189,6 +189,8 @@ class Transactions implements ServiceInterface
         $patterns = [
             // 0) Kasus khusus voucher tidak tersedia
             '/^R#(\S+)\s+(\S+)\s+(\S+)\s+(Gagal, Voucher tidak tersedia,.*?)\s+Saldo\s([\d\.,]+)\s*@\s*(.+)$/u',
+            // 0b) Kasus khusus nomor HP tidak benar
+            '/^R#(\S+)\s+(\S+)\s+(\S+)\s+(Nomor HP tidak benar\..*?)\s+Saldo\s([\d\.,]+)\s*@\s*(.+)$/u',
             // 1) Normal dengan koma
             '/^R#(\S+)\s+(\S+)\s+(\S+),\s+(.*?)\s+Saldo\s([\d\.,]+)\s*@\s*(.+)$/u',
             // 2) Normal tanpa koma
