@@ -30,7 +30,7 @@ if (! function_exists('parseTransactionMessage')) {
         }
 
         // refid
-        if (preg_match('/R#([a-zA-Z0-9_]+)/', $clean, $m)) {
+        if (preg_match('/R#([\w\-]+)/', $clean, $m)) {
             $result['refid'] = $m[1];
         }
 

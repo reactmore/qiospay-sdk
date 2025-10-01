@@ -127,7 +127,9 @@ class ResponseParser
 
         // daftar kata kunci gagal
         $failKeywords = [
-            'gagal',
+            'GAGAL',
+            'Gagal',
+            'Transaksi sebelumnya ke ID Pelanggan',
             'tidak benar',
             'invalid',
             'reject',
@@ -142,11 +144,17 @@ class ResponseParser
             }
         }
 
-        // fallback jika ada kata sukses / berhasil
-        if (stripos($statusMsg, 'sukses') !== false || stripos($statusMsg, 'berhasil') !== false) {
-            return 'SUKSES';
+        $successKeywords = [
+            'Mohon tunggu transaksi sedang diproses',
+        ];
+
+        foreach ($successKeywords as $sw) {
+            if (stripos($statusMsg, $sw) !== false) {
+                return 'SUKSES';
+            }
         }
 
+        // fallback 
         return 'UNKNOWN'; // default kalau ambiguous
     }
 }

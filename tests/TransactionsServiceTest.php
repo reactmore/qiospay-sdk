@@ -29,6 +29,7 @@ class TransactionsServiceTest extends TestCase
         $this->assertSame('trx_1758979420', $response->data['trx_id']);
         $this->assertSame('DANA10', $response->data['product_code']);
         $this->assertSame('085155092922', $response->data['dest']);
+        $this->assertSame('GAGAL', $response->data['transaction_status']);
         $this->assertStringContainsString('diabaikan karena Harga Voucher', $response->data['status_msg']);
         $this->assertSame('71.232', $response->data['saldo']);
         $this->assertSame('27/09/2025 20:23', $response->data['datetime']);
@@ -56,6 +57,7 @@ class TransactionsServiceTest extends TestCase
         $this->assertSame('trx_1758141872', $response->data['trx_id']);
         $this->assertSame('cekd', $response->data['product_code']);
         $this->assertSame('085155092922', $response->data['dest']);
+        $this->assertSame('SUKSES', $response->data['transaction_status']);
         $this->assertStringContainsString('Mohon tunggu transaksi sedang', $response->data['status_msg']);
         $this->assertSame('100.543', $response->data['saldo']);
         $this->assertSame('18/09/2025 10:44', $response->data['datetime']);
@@ -83,6 +85,7 @@ class TransactionsServiceTest extends TestCase
         $this->assertSame('trx_1758978632', $response->data['trx_id']);
         $this->assertSame('CEKBYUQM', $response->data['product_code']);
         $this->assertSame('085155092922', $response->data['dest']);
+        $this->assertSame('GAGAL', $response->data['transaction_status']);
         $this->assertStringContainsString('GAGAL.', $response->data['status_msg']);
         $this->assertSame('71.232', $response->data['saldo']);
         $this->assertSame('27/09/2025 20:10', $response->data['datetime']);
@@ -110,6 +113,7 @@ class TransactionsServiceTest extends TestCase
         $this->assertSame('trx_1759238656', $response->data['trx_id']);
         $this->assertSame('DANA15', $response->data['product_code']);
         $this->assertSame('6285155092922', $response->data['dest']);
+        $this->assertSame('GAGAL', $response->data['transaction_status']);
         $this->assertStringContainsString('Gagal, Voucher tidak tersedia, silakan pilih nominal lainnya..', $response->data['status_msg']);
         $this->assertSame('88.420', $response->data['saldo']);
         $this->assertSame('30/09/2025 20:24', $response->data['datetime']);
@@ -136,6 +140,7 @@ class TransactionsServiceTest extends TestCase
         $this->assertTrue($response->success);
         $this->assertSame('trx_1758143250', $response->data['trx_id']);
         $this->assertSame('085155092922', $response->data['dest']);
+        $this->assertSame('GAGAL', $response->data['transaction_status']);
         $this->assertStringContainsString('danabqsp', $response->data['product_code']);
         $this->assertStringContainsString('Transaksi sebelumnya', $response->data['status_msg']);
         $this->assertSame('85.343', $response->data['saldo']);
@@ -164,6 +169,7 @@ class TransactionsServiceTest extends TestCase
         $this->assertSame('trx_1759240064', $response->data['trx_id']);
         $this->assertSame('DANA15', $response->data['product_code']);
         $this->assertSame('6285155092922', $response->data['dest']);
+        $this->assertSame('GAGAL', $response->data['transaction_status']);
         $this->assertStringContainsString('Nomor HP tidak', $response->data['status_msg']);
         $this->assertSame('88.420', $response->data['saldo']);
         $this->assertSame('30/09/2025 20:47', $response->data['datetime']);
