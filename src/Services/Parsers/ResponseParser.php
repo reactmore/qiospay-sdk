@@ -103,7 +103,7 @@ class ResponseParser
 
     private function formatParsed(array $data, string $raw): array
     {
-        return array_merge([
+        $parsed = array_merge([
             'trx_id'       => null,
             'product_code' => null,
             'dest'         => null,
@@ -112,5 +112,41 @@ class ResponseParser
             'datetime'     => null,
             'raw'          => trim($raw),
         ], $data);
+
+        // Tambahkan status transaksi
+        $parsed['transaction_status'] = $this->detectStatus($parsed['status_msg']);
+
+        return $parsed;
+    }
+
+    private function detectStatus(?string $statusMsg): string
+    {
+        if (empty($statusMsg)) {
+            return 'UNKNOWN';
+        }
+
+        // daftar kata kunci gagal
+        $failKeywords = [
+            'gagal',
+            'tidak benar',
+            'invalid',
+            'reject',
+            'tidak tersedia',
+            'error',
+            'lebih besar dari Harga Max'
+        ];
+
+        foreach ($failKeywords as $kw) {
+            if (stripos($statusMsg, $kw) !== false) {
+                return 'GAGAL';
+            }
+        }
+
+        // fallback jika ada kata sukses / berhasil
+        if (stripos($statusMsg, 'sukses') !== false || stripos($statusMsg, 'berhasil') !== false) {
+            return 'SUKSES';
+        }
+
+        return 'UNKNOWN'; // default kalau ambiguous
     }
 }
