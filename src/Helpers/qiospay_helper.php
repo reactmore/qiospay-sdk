@@ -1,9 +1,9 @@
 <?php
 
-if (!function_exists('parseTransactionMessage')) {
+if (! function_exists('parseTransactionMessage')) {
     function parseTransactionMessage(string $message): array
     {
-        // $message 
+        // $message
         // 'T#1899822 R#trx_1759243747, Alhamdulillah, SUKSES. DANA H2H-Saldo Dana 15.000.085155092922. SN: DanaTopup-DNID ANDXX SETXXXX\/15000\/2025093010121481030100166095304620436.. Saldo 73345 - 15075 = 58.270 @30\/09\/2025 21:55\r\nqiospay.id'
         // 'T#1900886 R#trx_1759288215, Alhamdulillah, SUKSES. Cek Produk Digital H2H-Cek Akun Dana.085155092922. SN: DANA-ANDXX SETXXXX\/Nominal:1. . Saldo 58270 - 0 = 58.270 @01\/10\/2025 10:10\r\nqiospay.id'
 
@@ -12,16 +12,16 @@ if (!function_exists('parseTransactionMessage')) {
         $clean = trim($clean);
 
         $result = [
-            "trxid"    => null,
-            "refid"    => null,
-            "status"   => null,
-            "account"  => null,
-            "product"  => null,
-            "sn"       => null,
-            "nominal"  => null,
-            "saldo"    => null,
-            "datetime" => null,
-            "note"     => null,
+            'trxid'    => null,
+            'refid'    => null,
+            'status'   => null,
+            'account'  => null,
+            'product'  => null,
+            'sn'       => null,
+            'nominal'  => null,
+            'saldo'    => null,
+            'datetime' => null,
+            'note'     => null,
         ];
 
         // trxid
@@ -42,8 +42,8 @@ if (!function_exists('parseTransactionMessage')) {
         // account (bisa nomor HP atau rekening bank)
         if (preg_match('/\b(08[0-9]{8,13})\b/', $clean, $m)) {
             $result['account'] = $m[1];
-        } 
-        
+        }
+
         if (preg_match('/\.([0-9]{8,16})\./', $clean, $m)) {
             $result['account'] = $m[1];
         }

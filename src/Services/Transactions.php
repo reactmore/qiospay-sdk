@@ -103,7 +103,6 @@ class Transactions implements ServiceInterface
                 'password' => $this->config->memberPassword,
             ];
 
-
             // optional
             if (! empty($request['harga_max'])) {
                 $payload['harga_max'] = (int) $request['harga_max'];
@@ -116,12 +115,12 @@ class Transactions implements ServiceInterface
                     $payload['dest'],
                     $payload['refID'],
                     $payload['pin'],
-                    $payload['password']
+                    $payload['password'],
                 );
             }
 
             $response = $this->adapter->get('api/h2h/trx', $payload);
-            $body = (string) $response->getBody();
+            $body     = (string) $response->getBody();
 
             if ($body === 'Invalid user') {
                 throw new MissingArguements('Invalid user');
@@ -138,7 +137,7 @@ class Transactions implements ServiceInterface
             }
 
             return ResponseFormatter::formatResponse(
-                json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             );
         } catch (BaseException $e) {
             return ResponseFormatter::formatErrorResponse($e->getMessage(), $e->getCode());
@@ -213,22 +212,22 @@ class Transactions implements ServiceInterface
                     $parsed['saldo']        = $matches[5] ?? null;
                     $parsed['datetime']     = $matches[6] ?? null;
                 } elseif ($groupCount === 5) {
-                    $parsed['trx_id']       = $matches[1] ?? null;
-                    $leftPart               = trim($matches[2] ?? '');
-                    $parsed['status_msg']   = trim($matches[3] ?? '');
-                    $parsed['saldo']        = $matches[4] ?? null;
-                    $parsed['datetime']     = $matches[5] ?? null;
+                    $parsed['trx_id']     = $matches[1] ?? null;
+                    $leftPart             = trim($matches[2] ?? '');
+                    $parsed['status_msg'] = trim($matches[3] ?? '');
+                    $parsed['saldo']      = $matches[4] ?? null;
+                    $parsed['datetime']   = $matches[5] ?? null;
 
                     if ($leftPart !== '') {
-                        $tokens = preg_split('/\s+/', $leftPart);
+                        $tokens    = preg_split('/\s+/', $leftPart);
                         $lastToken = end($tokens);
                         if (preg_match('/\d/', $lastToken)) {
                             array_pop($tokens);
                             $parsed['product_code'] = trim(implode(' ', $tokens)) ?: $leftPart;
-                            $parsed['dest'] = $lastToken;
+                            $parsed['dest']         = $lastToken;
                         } else {
                             $parsed['product_code'] = $leftPart;
-                            $parsed['dest'] = null;
+                            $parsed['dest']         = null;
                         }
                     }
                 }
@@ -242,23 +241,23 @@ class Transactions implements ServiceInterface
     /**
      * Generate QiosPay H2H signature
      */
-    function generateQiosPaySignature(
+    public function generateQiosPaySignature(
         string $memberID,
         string $product,
         string $dest,
         string $refID,
         string $pin,
-        string $password
+        string $password,
     ): string {
         // pastikan trim dan lowercase sesuai dok
-        $product = strtolower(trim($product));
-        $dest    = trim($dest);
-        $refID   = trim($refID);
-        $pin     = trim($pin);
+        $product  = strtolower(trim($product));
+        $dest     = trim($dest);
+        $refID    = trim($refID);
+        $pin      = trim($pin);
         $password = trim($password);
         $memberID = trim($memberID);
 
-        $stringToHash = "Ravinagc|$memberID|$product|$dest|$refID|$pin|$password";
+        $stringToHash = "Ravinagc|{$memberID}|{$product}|{$dest}|{$refID}|{$pin}|{$password}";
 
         // sha1 raw output
         $sha1Hash = sha1($stringToHash);

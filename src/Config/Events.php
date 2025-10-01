@@ -4,6 +4,6 @@ namespace Reactmore\QiosPay\Config;
 
 use CodeIgniter\Events\Events;
 
-Events::on('pre_system', function () {
-    helper("qiospay");
+Events::on('pre_system', static function () {
+    helper('qiospay');
 });
