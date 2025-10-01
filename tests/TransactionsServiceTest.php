@@ -174,4 +174,32 @@ class TransactionsServiceTest extends TestCase
         $this->assertSame('88.420', $response->data['saldo']);
         $this->assertSame('30/09/2025 20:47', $response->data['datetime']);
     }
+
+    public function testParseInsufficientBalance(): void
+    {
+        $body = "R#trx_1759315231 DANA15 085155092922, Saldo tidak mencukupi. Saldo 5.710 @ 01/10/2025 17:40";
+
+        $mockStream = $this->createMock(\Psr\Http\Message\StreamInterface::class);
+        $mockStream->method('__toString')->willReturn($body);
+
+        $mockResponse = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+        $mockResponse->method('getBody')->willReturn($mockStream);
+
+        $mockAdapter = $this->createMock(\Reactmore\SupportAdapter\Adapter\AdapterInterface::class);
+        $mockAdapter->expects($this->once())
+            ->method('get')
+            ->willReturn($mockResponse);
+
+        $service  = new Transactions($mockAdapter, $this->config);
+        $response = $service->h2h(['product' => 'DANA15', 'dest' => '085155092922']);
+
+        $this->assertTrue($response->success);
+        $this->assertSame('trx_1759315231', $response->data['trx_id']);
+        $this->assertSame('DANA15', $response->data['product_code']);
+        $this->assertSame('085155092922', $response->data['dest']);
+        $this->assertSame('GAGAL', $response->data['transaction_status']);
+        $this->assertStringContainsString('Saldo tidak mencukupi', $response->data['status_msg']);
+        $this->assertSame('5.710', $response->data['saldo']);
+        $this->assertSame('01/10/2025 17:40', $response->data['datetime']);
+    }
 }

@@ -130,6 +130,7 @@ class ResponseParser
             'GAGAL',
             'Gagal',
             'Transaksi sebelumnya ke ID Pelanggan',
+            'Saldo tidak mencukupi',
             'tidak benar',
             'invalid',
             'reject',
