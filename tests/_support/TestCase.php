@@ -35,6 +35,8 @@ abstract class TestCase extends CIUnitTestCase
     {
         parent::setUp();
 
+        helper('qiospay');
+
         $this->config = new Qiospay();
         $this->config->apiKey       = 'dummy_api_key';
         $this->config->merchantCode = 'dummy_merchant_code';
