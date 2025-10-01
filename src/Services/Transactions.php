@@ -4,6 +4,7 @@ namespace Reactmore\QiosPay\Services;
 
 use GuzzleHttp\Exception\RequestException;
 use Reactmore\QiosPay\Config\Qiospay;
+use Reactmore\QiosPay\Services\Parsers\ResponseParser;
 use Reactmore\QiosPay\Services\Traits\BodyAccessorTrait;
 use Reactmore\QiosPay\Validations\Validator;
 use Reactmore\SupportAdapter\Adapter\AdapterInterface;
@@ -35,6 +36,8 @@ class Transactions implements ServiceInterface
      * @var Qiospay
      */
     private $config;
+    
+    private ResponseParser $parser;
 
     /**
      * Qris constructor.
@@ -51,6 +54,7 @@ class Transactions implements ServiceInterface
     {
         $this->config  = $config ?? new Qiospay();
         $this->adapter = $adapter;
+        $this->parser  = new ResponseParser();
 
         $this->validateConfig($config);
     }
@@ -122,19 +126,11 @@ class Transactions implements ServiceInterface
             $response = $this->adapter->get('api/h2h/trx', $payload);
             $body     = (string) $response->getBody();
 
-            if ($body === 'Invalid user') {
-                throw new MissingArguements('Invalid user');
+            if ($body === 'Invalid user' || $body === 'Invalid signature') {
+                return ResponseFormatter::formatErrorResponse($body, 500);
             }
 
-            $parsed = [];
-            if (is_string($body)) {
-                if (preg_match($this->getRejectedHargaMaxPattern(), trim($body), $matches)) {
-                    $parsed = $this->parseRejectedHargaMax($matches, trim($body));
-                } else {
-                    // fallback ke regex lama kamu
-                    $parsed = $this->parseNormalResponse(trim($body));
-                }
-            }
+            $parsed = $this->parser->parse($body);
 
             return ResponseFormatter::formatResponse(
                 json_encode($parsed, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
@@ -257,13 +253,10 @@ class Transactions implements ServiceInterface
         $password = trim($password);
         $memberID = trim($memberID);
 
-        $stringToHash = "Ravinagc|{$memberID}|{$product}|{$dest}|{$refID}|{$pin}|{$password}";
-
-        // sha1 raw output
-        $sha1Hash = sha1($stringToHash);
+        $stringToHash = "OtomaX|{$memberID}|{$product}|{$dest}|{$refID}|{$pin}|{$password}";
 
         // encode base64
-        return base64_encode($sha1Hash);
+        return base64_encode(sha1($stringToHash));
     }
 
     /**
