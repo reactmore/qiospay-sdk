@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests;
+namespace Tests\ParseTest;
 
 use Tests\Support\TestCase;
 
