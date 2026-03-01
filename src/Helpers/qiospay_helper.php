@@ -39,8 +39,15 @@ if (! function_exists('parseTransactionMessage')) {
             $result['status'] = strtoupper($m[1]);
         }
 
+        // ===============================
+        // STATUS PROSES
+        // ===============================
+        if (!$result['status'] && stripos($clean, 'sedang diproses') !== false) {
+            $result['status'] = 'PROCESS';
+        }
+
         // account (bisa nomor HP atau rekening bank)
-        if (preg_match('/\b(08[0-9]{8,13})\b/', $clean, $m)) {
+        if (preg_match('/\b(0\d{8,15})\b/', $clean, $m)) {
             $result['account'] = $m[1];
         }
 

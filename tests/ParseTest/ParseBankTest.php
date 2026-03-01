@@ -23,6 +23,17 @@ class ParseBankTest extends TestCase
         $this->assertSame('01/10/2025 10:54', $parsed['datetime']);
     }
 
+    public function testParseProsesTransferBCA(): void
+    {
+        $message = "R#INV-1772362352 TFBCA10 0953955315, Mohon tunggu transaksi sedang diproses. Saldo 18.848 @ 02\/03\/2026 01:52";
+
+        $parsed = parseTransactionMessage($message);
+
+
+     
+        $this->assertSame('PROCESS', $parsed['status']);
+    }
+
     public function testParseTransferBCA(): void
     {
         $message = "T#1901056 R#trx_1759291955, Alhamdulillah, SUKSES. Bank BCA-Saldo BCA 10.000.0953955315. SN: 2025100117611514797454387969. Saldo 48060 - 11900 = 36.160 @01\/10\/2025 11:12\r\nqiospay.id";
