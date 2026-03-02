@@ -145,6 +145,12 @@ class ResponseParser
 
         $parsed['transaction_status'] = $this->detectStatus($parsed['status_msg']);
 
+        // Backward compatible aliases used by helper-level parsing responses.
+        $parsed['trxid']   = $parsed['trx_id'];
+        $parsed['product'] = $parsed['product_code'];
+        $parsed['account'] = $parsed['dest'];
+        $parsed['status']  = $parsed['transaction_status'];
+
         return $parsed;
     }
 

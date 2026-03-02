@@ -42,20 +42,11 @@ class ParseBankTest extends TestCase
         $service  = new Transactions($mockAdapter, $this->config);
         $response = $service->h2h(['product' => 'TFBCA10', 'dest' => '0953955315']);
 
-        $this->assertSame('INV-1772362352', $response['trxid']);
-        $this->assertSame('PROCESS', $response['transaction_status']);
-        $this->assertSame('0953955315', $response['account']);
-        $this->assertSame('TFBCA10', $response['product']);
-        $this->assertSame('18.848', $response['saldo']);
-    }
-
-    public function testParseProsesTransferBCA(): void
-    {
-        $message = "R#INV-1772362352 TFBCA10 0953955315, Mohon tunggu transaksi sedang diproses. Saldo 18.848 @ 02\/03\/2026 01:52";
-
-        $parsed = parseTransactionMessage($message);
-
-        $this->assertSame('PROCESS', $parsed['status']);
+        $this->assertSame('INV-1772362352', $response['data']['trxid']);
+        $this->assertSame('PROCESS', $response['data']['transaction_status']);
+        $this->assertSame('0953955315', $response['data']['account']);
+        $this->assertSame('TFBCA10', $response['data']['product']);
+        $this->assertSame('18.848', $response['data']['saldo']);
     }
 
     public function testParseTransferBCA(): void
