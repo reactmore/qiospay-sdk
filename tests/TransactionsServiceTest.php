@@ -44,6 +44,19 @@ class TransactionsServiceTest extends TestCase
                     'datetime' => '27/09/2025 20:23',
                 ],
             ],
+            'processed_top_up_pulsa' => [
+                'body' => 'R#INV-1772362352 TFBCA10 0953955315, Mohon tunggu transaksi sedang diproses. Saldo 18.848 @ 02/03/2026 01:52',
+                'request' => ['product' => 'TFBCA10', 'dest' => '0953955315'],
+                'expected' => [
+                    'trx_id' => 'INV-1772362352',
+                    'product_code' => 'TFBCA10',
+                    'dest' => '0953955315',
+                    'transaction_status' => 'PROCESS',
+                    'status_msg_contains' => 'Mohon tunggu transaksi sedang',
+                    'saldo' => '18.848',
+                    'datetime' => '02/03/2026 01:52',
+                ],
+            ],
             'processed' => [
                 'body' => 'R#trx_1758141872 cekd 085155092922, Mohon tunggu transaksi sedang diproses. Saldo 100.543 @ 18/09/2025 10:44',
                 'request' => ['product' => 'DANA', 'dest' => '085155092922'],
