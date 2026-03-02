@@ -4,29 +4,60 @@ namespace Reactmore\QiosPay\Services\Parsers;
 
 class ResponseParser
 {
+    private const STATUS_FAILED = 'GAGAL';
+    private const STATUS_SUCCESS = 'SUKSES';
+    private const STATUS_PROCESS = 'PROCESS';
+    private const STATUS_UNKNOWN = 'UNKNOWN';
+
     /**
      * Regex map dengan handler masing-masing.
+     *
+     * @var array<string, callable>
      */
     private array $patterns = [];
+
+    /**
+     * @var list<string>
+     */
+    private array $failKeywords = [
+        'gagal',
+        'transaksi sebelumnya ke id pelanggan',
+        'saldo tidak mencukupi',
+        'tidak benar',
+        'invalid',
+        'reject',
+        'tidak tersedia',
+        'error',
+        'lebih besar dari harga max',
+    ];
+
+    /**
+     * @var list<string>
+     */
+    private array $successKeywords = [
+        'alhamdulilah',
+        'sukses',
+        'berhasil',
+    ];
+
+    /**
+     * @var list<string>
+     */
+    private array $pendingKeywords = [
+        'mohon tunggu transaksi sedang diproses',
+        'sedang diproses',
+        'masih dalam proses',
+    ];
 
     public function __construct()
     {
         $this->patterns = [
-            // Harga Max Rejected
             '/^R#(\S+)\s+Saldo\s+(\w+)\s+([\d\.]+)\s+([A-Z]+\d+)\.(\d+),\s+(.*?)\s+Saldo\s+([\d\.,]+)\s*@\s*(.+)$/u' => [$this, 'parseRejectedHargaMax'],
-
-            // Voucher tidak tersedia
             '/^R#(\S+)\s+(\S+)\s+(\S+)\s+(Gagal, Voucher tidak tersedia,.*?)\s+Saldo\s([\d\.,]+)\s*@\s*(.+)$/u' => [$this, 'parseNormalSixGroups'],
-
-            // Nomor HP tidak benar
             '/^R#(\S+)\s+(\S+)\s+(\S+)\s+(Nomor HP tidak benar\..*?)\s+Saldo\s([\d\.,]+)\s*@\s*(.+)$/u' => [$this, 'parseNormalSixGroups'],
-
-            // Normal (variasi)
             '/^R#(\S+)\s+(\S+)\s+(\S+),\s+(.*?)\s+Saldo\s([\d\.,]+)\s*@\s*(.+)$/u' => [$this, 'parseNormalSixGroups'],
             '/^R#(\S+)\s+(\S+)\s+(\S+)\s+(.*?)\s+Saldo\s([\d\.,]+)\s*@\s*(.+)$/u' => [$this, 'parseNormalSixGroups'],
             '/^R#(\S+)\s+(\S+)\s+(\S+)(?:,)?\s+(.*?)\s+Saldo\s([\d\.,]+)\s*@\s*(.+)$/u' => [$this, 'parseNormalSixGroups'],
-
-            // Fallback
             '/^R#(\S+)\s+(.*?),\s+(.*?)\s+Saldo\s([\d\.,]+)\s*@\s*(.+)$/u' => [$this, 'parseNormalFiveGroups'],
         ];
     }
@@ -41,10 +72,8 @@ class ResponseParser
             }
         }
 
-        // fallback kalau nggak match apapun
         return $this->defaultParsed($body);
     }
-
 
     private function parseRejectedHargaMax(array $m, string $raw): array
     {
@@ -77,9 +106,10 @@ class ResponseParser
         $dest     = null;
 
         if ($leftPart !== '') {
-            $tokens    = preg_split('/\s+/', $leftPart);
-            $lastToken = end($tokens);
-            if (preg_match('/\d/', $lastToken)) {
+            $tokens = preg_split('/\s+/', $leftPart) ?: [];
+            $lastToken = $tokens === [] ? null : end($tokens);
+
+            if (is_string($lastToken) && preg_match('/\d/', $lastToken)) {
                 array_pop($tokens);
                 $product = implode(' ', $tokens);
                 $dest    = $lastToken;
@@ -113,7 +143,6 @@ class ResponseParser
             'raw'          => trim($raw),
         ], $data);
 
-        // Tambahkan status transaksi
         $parsed['transaction_status'] = $this->detectStatus($parsed['status_msg']);
 
         return $parsed;
@@ -122,50 +151,37 @@ class ResponseParser
     private function detectStatus(?string $statusMsg): string
     {
         if (empty($statusMsg)) {
-            return 'UNKNOWN';
+            return self::STATUS_UNKNOWN;
         }
 
-        // daftar kata kunci gagal
-        $failKeywords = [
-            'GAGAL',
-            'Gagal',
-            'Transaksi sebelumnya ke ID Pelanggan',
-            'Saldo tidak mencukupi',
-            'tidak benar',
-            'invalid',
-            'reject',
-            'tidak tersedia',
-            'error',
-            'lebih besar dari Harga Max'
-        ];
+        $normalizedStatus = mb_strtolower($statusMsg);
 
-        foreach ($failKeywords as $kw) {
-            if (stripos($statusMsg, $kw) !== false) {
-                return 'GAGAL';
+        if ($this->containsAnyKeyword($normalizedStatus, $this->failKeywords)) {
+            return self::STATUS_FAILED;
+        }
+
+        if ($this->containsAnyKeyword($normalizedStatus, $this->pendingKeywords)) {
+            return self::STATUS_PROCESS;
+        }
+
+        if ($this->containsAnyKeyword($normalizedStatus, $this->successKeywords)) {
+            return self::STATUS_SUCCESS;
+        }
+
+        return self::STATUS_UNKNOWN;
+    }
+
+    /**
+     * @param list<string> $keywords
+     */
+    private function containsAnyKeyword(string $text, array $keywords): bool
+    {
+        foreach ($keywords as $keyword) {
+            if (str_contains($text, $keyword)) {
+                return true;
             }
         }
 
-        $successKeywords = [
-            'Alhamdulilah',
-        ];
-
-        foreach ($successKeywords as $sw) {
-            if (stripos($statusMsg, $sw) !== false) {
-                return 'SUKSES';
-            }
-        }
-
-        $pendingKeywords = [
-            'Mohon tunggu transaksi sedang diproses',
-        ];
-
-        foreach ($pendingKeywords as $sw) {
-            if (stripos($statusMsg, $sw) !== false) {
-                return 'PROCESS';
-            }
-        }
-
-        // fallback 
-        return 'UNKNOWN'; // default kalau ambiguous
+        return false;
     }
 }
