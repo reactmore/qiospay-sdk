@@ -6,6 +6,7 @@ use Reactmore\QiosPay\Config\Qiospay;
 use Reactmore\QiosPay\Services\Products;
 use Reactmore\QiosPay\Services\Qris;
 use Reactmore\QiosPay\Services\Transactions;
+use Reactmore\QiosPay\Services\Parsers\ResponseParser;
 use Reactmore\SupportAdapter\Adapter\Auth\None;
 use Reactmore\SupportAdapter\Adapter\Guzzle;
 
@@ -66,5 +67,13 @@ class QiosPayProvider
     public function transactions(): Transactions
     {
         return new Transactions($this->adapter, $this->getConfig());
+    }
+
+     /**
+     * Parse Message QIOSPAY
+     */
+    public function parseMessage(): ResponseParser
+    {
+        return new ResponseParser();
     }
 }

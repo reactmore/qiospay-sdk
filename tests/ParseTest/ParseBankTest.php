@@ -3,6 +3,7 @@
 namespace Tests\ParseTest;
 
 use Tests\Support\TestCase;
+use Reactmore\QiosPay\Services\Transactions;
 
 class ParseBankTest extends TestCase
 {
@@ -23,6 +24,27 @@ class ParseBankTest extends TestCase
         $this->assertSame('01/10/2025 10:54', $parsed['datetime']);
     }
 
+    public function testParseResponseProcessed(): void
+    {
+        $body = "R#INV-1772362352 TFBCA10 0953955315, Mohon tunggu transaksi sedang diproses. Saldo 18.848 @ 02\/03\/2026 01:52";
+
+        $mockStream = $this->createMock(\Psr\Http\Message\StreamInterface::class);
+        $mockStream->method('__toString')->willReturn($body);
+
+        $mockResponse = $this->createMock(\Psr\Http\Message\ResponseInterface::class);
+        $mockResponse->method('getBody')->willReturn($mockStream);
+
+        $mockAdapter = $this->createMock(\Reactmore\SupportAdapter\Adapter\AdapterInterface::class);
+        $mockAdapter->expects($this->once())
+            ->method('get')
+            ->willReturn($mockResponse);
+
+        $service  = new Transactions($mockAdapter, $this->config);
+        $response = $service->h2h(['product' => 'TFBCA10', 'dest' => '0953955315']);
+
+        d($response);
+    }
+
     public function testParseProsesTransferBCA(): void
     {
         $message = "R#INV-1772362352 TFBCA10 0953955315, Mohon tunggu transaksi sedang diproses. Saldo 18.848 @ 02\/03\/2026 01:52";
@@ -30,7 +52,7 @@ class ParseBankTest extends TestCase
         $parsed = parseTransactionMessage($message);
 
 
-     
+
         $this->assertSame('PROCESS', $parsed['status']);
     }
 

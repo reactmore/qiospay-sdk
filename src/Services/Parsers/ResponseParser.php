@@ -146,12 +146,22 @@ class ResponseParser
         }
 
         $successKeywords = [
-            'Mohon tunggu transaksi sedang diproses',
+            'Alhamdulilah',
         ];
 
         foreach ($successKeywords as $sw) {
             if (stripos($statusMsg, $sw) !== false) {
                 return 'SUKSES';
+            }
+        }
+
+        $pendingKeywords = [
+            'Mohon tunggu transaksi sedang diproses',
+        ];
+
+        foreach ($pendingKeywords as $sw) {
+            if (stripos($statusMsg, $sw) !== false) {
+                return 'PROCESS';
             }
         }
 
