@@ -35,15 +35,25 @@ abstract class TestCase extends CIUnitTestCase
     {
         parent::setUp();
 
+        // Load .env menggunakan loader bawaan CodeIgniter 4
+        $dotenv = new \CodeIgniter\Config\DotEnv(
+            HOMEPATH
+        );
+
+        $dotenv->load();
+
+        
+
+
         helper('qiospay');
 
         $this->config = new Qiospay();
-        $this->config->apiKey       = 'dummy_api_key';
-        $this->config->merchantCode = 'dummy_merchant_code';
-        $this->config->qrisString   = 'dummy_merchant_qris_string';
-        $this->config->memberId   = 'dummy_memberId';
-        $this->config->memberPin   = 'dummy_memberPin';
-        $this->config->memberPassword   = 'dummy_memberPassword';
+        $this->config->apiKey       = env('Qiospay.apiKey');
+        $this->config->merchantCode = env('Qiospay.merchantCode');
+        $this->config->qrisString   = env('Qiospay.qrisString');
+        $this->config->memberId   = env('Qiospay.memberId');
+        $this->config->memberPin   = env('Qiospay.memberPin');
+        $this->config->memberPassword   = env('Qiospay.memberPassword');
 
         $this->qiospay = new QiosPayProvider($this->config);
     }

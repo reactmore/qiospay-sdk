@@ -93,6 +93,7 @@ class Qris implements ServiceInterface
     {
         try {
             Validator::validateArrayRequest($filters);
+
             $request  = $this->adapter->get("api/mutasi/qris/{$this->config->merchantCode}/{$this->config->apiKey}");
             $response = json_decode($request->getBody()->getContents(), true);
 
@@ -174,9 +175,9 @@ class Qris implements ServiceInterface
     {
         $amount      = $params['amount'] ?? null;
         $service_fee = $params['service_fee'] ?? false;
-        $feeType     = $params['fee_type'] ?? 'persen';
-        $feeValue    = $params['fee_value'] ?? 0.7;
-        $path        = $params['path'] ?? null;
+        $feeType     = $params['fee_type'] ?? $this->config->defaultFeeType;
+        $feeValue    = $params['fee_value'] ?? $this->config->defaultFeeValue;
+        $path        = $params['path'] ?? $this->config->qrisImagePath;
 
         $tax       = '';
         $qrPayload = $this->config->qrisString;
@@ -185,8 +186,12 @@ class Qris implements ServiceInterface
             // Hitung pajak/biaya layanan
             if ($service_fee) {
                 $feeValue = trim((string) $feeValue);
-                $feeCode  = ($feeType === 'rupiah') ? '55020256' : '55020357';
-                $tax      = $feeCode . sprintf('%02d', strlen($feeValue)) . $feeValue;
+
+                $feeCode = $feeType === 'rupiah'
+                    ? $this->config->feeCodeRupiah
+                    : $this->config->feeCodePersen;
+
+                $tax = $feeCode . sprintf('%02d', strlen($feeValue)) . $feeValue;
             }
 
             // Ubah QR static ke dynamic dan sisipkan nominal

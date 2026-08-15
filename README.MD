@@ -148,9 +148,8 @@ $data = $response->getData();
 
 ### Generate Dynamic Qris
 ```php
-$response = $qrisService->generateDynamicQris([
+$response = $qrisService->createQris([
     'amount' => 15000,
-    'note'   => 'Order #12345'
 ]);
 $qrisData = $response->getData();
 ```

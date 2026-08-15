@@ -56,13 +56,6 @@
             <env name="database.tests.username" value="tests_user"/>
             <env name="database.tests.password" value=""/>
             <env name="database.tests.DBDriver" value="MySQLi"/>
-            <env name="database.tests.DBPrefix" value="tests_"/>
-            -->
-
-        <!-- Tripay Authentication -->
-        <env name="Tripay.stage" value="" />
-        <env name="Tripay.apiKey" value="" />
-        <env name="Tripay.privateKey" value="" />
-        <env name="Tripay.merchantCode" value="" />
+            <env name="database.tests.DBPrefix" value="tests_"/> -->
     </php>
 </phpunit>
