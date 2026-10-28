@@ -104,7 +104,7 @@ class VirtualAccounts implements ServiceInterface
                 'url_callback'   => $request['url_callback'],
             ];
 
-            $response = $this->adapter->post('api/create/va', $payload);
+            $response = $this->adapter->post('api/create/va', ['json' => $payload]);
             $body     = (string) $response->getBody();
             $data     = json_decode($body, true);
 
