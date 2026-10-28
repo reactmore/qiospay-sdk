@@ -44,6 +44,7 @@
         "test-helper": "phpunit tests/ParseTransactionMessageTest.php",
         "test-helper-bank": "phpunit tests/ParseTest/ParseBankTest.php",
         "test-generate-qris": "phpunit tests/QrisServiceTest.php",
+        "test-products": "phpunit tests/ProductsServiceTest.php",
         "cs-fix": "php-cs-fixer fix --ansi --verbose --diff"
     }
 }
