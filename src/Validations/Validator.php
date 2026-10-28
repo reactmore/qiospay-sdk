@@ -42,6 +42,24 @@ class Validator
         MainValidator::validateContentType($request);
     }
 
+    public static function validateVirtualAccountRequest(array $r): void
+    {
+        foreach (['amount', 'bank_code', 'partner_reff', 'customer_id', 'customer_name', 'customer_phone', 'customer_email', 'url_callback'] as $f) {
+            if (!isset($r[$f]) || $r[$f] === '') {
+                throw new MissingArguements("Parameter '{$f}' is required.");
+            }
+        }
+        if (!is_numeric($r['amount']) || $r['amount'] <= 0) {
+            throw new MissingArguements("Parameter 'amount' must be a positive number.");
+        }
+        if (!\Reactmore\QiosPay\Constants\BankCodes::isValid((string) $r['bank_code'])) {
+            throw new MissingArguements("Unsupported bank_code '{$r['bank_code']}'.");
+        }
+        if (stripos((string) $r['url_callback'], 'https://') !== 0 || !filter_var($r['url_callback'], FILTER_VALIDATE_URL)) {
+            throw new MissingArguements("Parameter 'url_callback' must be a valid HTTPS URL.");
+        }
+    }
+
     /**
      * Validate payload for creating a coupon.
      *
