@@ -1,4 +1,6 @@
-# Qiospay SDK for CodeIgniter 4
+# Qiospay SDK for CodeIgniter 4 [Provider Shutdown]
+
+Alterantif QRIS Toolkit : [QRIS TOOLKIT](https://github.com/reactmore/qris-toolkit)
 
 This library provides **QiosPay** integration with the **CodeIgniter 4** framework and standalone PHP projects.
 It helps manage data and APIs easily through Service Facade.
